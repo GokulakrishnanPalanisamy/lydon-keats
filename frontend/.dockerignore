@@ -1,7 +1,7 @@
 node_modules
 dist
 dist-ssr
-.env.docker
+.env
 .git
 .gitignore
 *.md

@@ -1,5 +1,4 @@
 .env
-.env.docker
 .env.backup
 .env.production
 .git
