@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Http\Resources\OrganizationResource;
+use App\Http\Resources\UserResource;
 use App\Models\Organization;
 use App\Models\Role;
 use App\Models\User;
@@ -71,10 +73,10 @@ class AuthController extends Controller
             $this->tenantService->createDatabase($databaseName);
 
             $organization->update([
-                'database_host' => config('database.connections.central.host'),
+                'database_host' => config('database.connections.tenant.host'),
                 'database_name' => $databaseName,
-                'database_username' => config('database.connections.central.username'),
-                'database_password' => config('database.connections.central.password'),
+                'database_username' => config('database.connections.tenant.username'),
+                'database_password' => config('database.connections.tenant.password'),
             ]);
 
             $this->tenantService->runMigrations($organization);
@@ -92,8 +94,8 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'user' => $user->load('role'),
-            'organization' => $organization,
+            'user' => new UserResource($user->load('role')),
+            'organization' => new OrganizationResource($organization),
             'token' => $token,
         ], 201);
     }
@@ -117,8 +119,8 @@ class AuthController extends Controller
         $organization = Organization::find($user->organization_id);
 
         return response()->json([
-            'user' => $user->load('role'),
-            'organization' => $organization,
+            'user' => new UserResource($user->load('role')),
+            'organization' => new OrganizationResource($organization),
             'token' => $token,
         ]);
     }
@@ -142,8 +144,8 @@ class AuthController extends Controller
         $organization = Organization::find($user->organization_id);
 
         return response()->json([
-            'user' => $user,
-            'organization' => $organization,
+            'user' => new UserResource($user),
+            'organization' => new OrganizationResource($organization),
         ]);
     }
 }

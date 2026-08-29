@@ -17,7 +17,7 @@ class TenantService
      */
     public function generateDatabaseName(Organization $organization): string
     {
-        return 'tenant_'.$organization->id;
+        return 'tenant_'. $organization->name. '_' . $organization->id;
     }
 
     /**
