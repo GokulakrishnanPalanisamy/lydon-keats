@@ -1,3 +1,5 @@
+import axios, { AxiosError } from 'axios'
+
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
 export class ApiError extends Error {
@@ -11,33 +13,36 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+const client = axios.create({
+  baseURL: `${API_URL}/api`,
+  headers: {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  },
+})
+
+client.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
 
-  const response = await fetch(`${API_URL}/api${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  })
-
-  const data = await response.json().catch(() => ({}))
-
-  if (!response.ok) {
-    throw new ApiError(data.message ?? 'Something went wrong.', response.status, data.errors)
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
   }
 
-  return data as T
-}
+  return config
+})
+
+client.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError<{ message?: string; errors?: Record<string, string[]> }>) => {
+    const status = error.response?.status ?? 0
+    const message = error.response?.data?.message ?? 'Something went wrong.'
+    const errors = error.response?.data?.errors
+
+    return Promise.reject(new ApiError(message, status, errors))
+  },
+)
 
 export const api = {
-  get: <T>(path: string) => request<T>(path),
-  post: <T>(path: string, body?: unknown) =>
-    request<T>(path, {
-      method: 'POST',
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    }),
+  get: <T>(path: string) => client.get<T>(path).then((res) => res.data),
+  post: <T>(path: string, body?: unknown) => client.post<T>(path, body).then((res) => res.data),
 }

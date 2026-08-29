@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { useAuth } from '../context/AuthContext'
+import { loginSchema, toFieldErrors } from '../validation/schemas'
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -18,10 +19,18 @@ export default function LoginPage() {
     event.preventDefault()
     setErrors({})
     setFormError(null)
+
+    const result = loginSchema.safeParse({ email, password })
+
+    if (!result.success) {
+      setErrors(toFieldErrors(result.error))
+      return
+    }
+
     setLoading(true)
 
     try {
-      await login({ email, password })
+      await login(result.data)
       navigate('/dashboard')
     } catch (error) {
       if (error instanceof ApiError && error.errors) {

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { useAuth } from '../context/AuthContext'
+import { registerSchema, toFieldErrors } from '../validation/schemas'
 
 export default function RegisterPage() {
   const { register } = useAuth()
@@ -21,16 +22,24 @@ export default function RegisterPage() {
     event.preventDefault()
     setErrors({})
     setFormError(null)
+
+    const result = registerSchema.safeParse({
+      organization_name: organizationName,
+      admin_name: adminName,
+      admin_email: adminEmail,
+      password,
+      password_confirmation: passwordConfirmation,
+    })
+
+    if (!result.success) {
+      setErrors(toFieldErrors(result.error))
+      return
+    }
+
     setLoading(true)
 
     try {
-      await register({
-        organization_name: organizationName,
-        admin_name: adminName,
-        admin_email: adminEmail,
-        password,
-        password_confirmation: passwordConfirmation,
-      })
+      await register(result.data)
       navigate('/dashboard')
     } catch (error) {
       if (error instanceof ApiError && error.errors) {
