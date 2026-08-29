@@ -48,6 +48,7 @@ class TenantService
         Config::set('database.connections.tenant.password', $organization->database_password);
 
         DB::purge('tenant');
+        DB::reconnect('tenant');
 
         Config::set('database.default', 'tenant');
     }

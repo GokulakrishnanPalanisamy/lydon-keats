@@ -28,6 +28,16 @@ client.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`
   }
 
+  // Tells the backend which organization's tenant database this request
+  // should operate against (technicians only — see AuthContext). The
+  // backend never trusts this on its own; it re-verifies the technician's
+  // assignment to this organization on every request.
+  const organizationId = localStorage.getItem('activeOrganizationId')
+
+  if (organizationId) {
+    config.headers['X-Organization-Id'] = organizationId
+  }
+
   return config
 })
 

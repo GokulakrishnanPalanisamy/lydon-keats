@@ -1,9 +1,11 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import './auth.css'
+import './dashboard.css'
 import ProtectedRoute from './components/ProtectedRoute'
 import DashboardPage from './pages/DashboardPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import SettingsPage from './pages/SettingsPage'
 import TechnicianDashboardPage from './pages/TechnicianDashboardPage'
 import TechnicianRegisterPage from './pages/TechnicianRegisterPage'
 import TechnicianSearchPage from './pages/TechnicianSearchPage'
@@ -36,6 +38,14 @@ function App() {
         element={
           <ProtectedRoute role="technician">
             <TechnicianDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
           </ProtectedRoute>
         }
       />
