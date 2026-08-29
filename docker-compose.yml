@@ -1,17 +1,16 @@
 services:
-  postgres:
-    image: postgres:16-alpine
+  mysql:
+    image: mysql:8.0
     restart: unless-stopped
     environment:
-      POSTGRES_DB: laravel
-      POSTGRES_USER: laravel
-      POSTGRES_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: central
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U laravel -d laravel"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-psecret"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -46,7 +45,7 @@ services:
       - ./backend:/var/www/html
       - backend_vendor:/var/www/html/vendor
     depends_on:
-      postgres:
+      mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -77,7 +76,7 @@ services:
       - app-network
 
 volumes:
-  postgres_data:
+  mysql_data:
   redis_data:
   backend_vendor:
   frontend_node_modules:

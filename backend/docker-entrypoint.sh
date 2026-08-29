@@ -19,4 +19,9 @@ fi
 echo "Running database migrations..."
 php artisan migrate --force
 
+# Idempotent (uses firstOrCreate), safe to run on every boot. Registration
+# needs the "admin" role to exist, so this can't be a manual/optional step.
+echo "Seeding roles..."
+php artisan db:seed --class=Database\\Seeders\\RoleSeeder --force
+
 exec "$@"

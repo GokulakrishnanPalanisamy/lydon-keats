@@ -4,13 +4,12 @@ RUN apk add --no-cache \
         git \
         unzip \
         curl \
-        libpq-dev \
-        postgresql-dev \
+        mysql-client \
         oniguruma-dev \
         libzip-dev \
         $PHPIZE_DEPS \
         linux-headers \
-    && docker-php-ext-install pdo pdo_pgsql pgsql mbstring bcmath zip pcntl \
+    && docker-php-ext-install pdo pdo_mysql mbstring bcmath zip pcntl \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && apk del $PHPIZE_DEPS linux-headers \
