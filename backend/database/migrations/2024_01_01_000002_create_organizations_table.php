@@ -12,11 +12,11 @@ return new class extends Migration
             $table->id();
             $table->string('name');
 
-            // Nullable here: the admin user doesn't exist yet when an
+            // Nullable here: the admin doesn't exist yet when an
             // organization row is first created. The foreign key itself is
-            // added afterwards, once the users table exists (see the
-            // add_admin_user_foreign_to_organizations_table migration).
-            $table->unsignedBigInteger('admin_user_id')->nullable();
+            // added afterwards, once the admins table exists (see the
+            // add_admin_foreign_to_organizations_table migration).
+            $table->unsignedBigInteger('admin_id')->nullable();
 
             $table->string('database_host')->nullable();
             $table->string('database_name')->nullable();

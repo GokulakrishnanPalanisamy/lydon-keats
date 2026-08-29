@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class UserResource extends JsonResource
+class AdminResource extends JsonResource
 {
     /**
      * @return array<string, mixed>
@@ -24,8 +24,6 @@ class UserResource extends JsonResource
                 'name' => $this->role->name,
                 'slug' => $this->role->slug,
             ]),
-//            'created_at' => $this->created_at,
-//            'updated_at' => $this->updated_at,
         ];
     }
 }

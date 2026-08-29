@@ -11,8 +11,13 @@ class Role extends Model
 {
     protected $connection = 'central';
 
-    public function users(): HasMany
+    public function admins(): HasMany
     {
-        return $this->hasMany(User::class);
+        return $this->hasMany(Admin::class);
+    }
+
+    public function technicians(): HasMany
+    {
+        return $this->hasMany(Technician::class);
     }
 }

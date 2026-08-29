@@ -2,15 +2,14 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { useAuth } from '../context/AuthContext'
-import { registerSchema, toFieldErrors } from '../validation/schemas'
+import { technicianRegisterSchema, toFieldErrors } from '../validation/schemas'
 
-export default function RegisterPage() {
-  const { registerAdmin } = useAuth()
+export default function TechnicianRegisterPage() {
+  const { registerTechnician } = useAuth()
   const navigate = useNavigate()
 
-  const [organizationName, setOrganizationName] = useState('')
-  const [adminName, setAdminName] = useState('')
-  const [adminEmail, setAdminEmail] = useState('')
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
 
@@ -23,10 +22,9 @@ export default function RegisterPage() {
     setErrors({})
     setFormError(null)
 
-    const result = registerSchema.safeParse({
-      organization_name: organizationName,
-      admin_name: adminName,
-      admin_email: adminEmail,
+    const result = technicianRegisterSchema.safeParse({
+      name,
+      email,
       password,
       password_confirmation: passwordConfirmation,
     })
@@ -39,8 +37,8 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
-      await registerAdmin(result.data)
-      navigate('/dashboard')
+      await registerTechnician(result.data)
+      navigate('/technician/dashboard')
     } catch (error) {
       if (error instanceof ApiError && error.errors) {
         setErrors(error.errors)
@@ -57,35 +55,20 @@ export default function RegisterPage() {
   return (
     <div className="auth-page">
       <form onSubmit={handleSubmit}>
-        <h1>Register your organization</h1>
+        <h1>Register as a technician</h1>
 
         {formError && <p className="form-error">{formError}</p>}
 
         <label>
-          Organization Name
-          <input
-            value={organizationName}
-            onChange={(e) => setOrganizationName(e.target.value)}
-            required
-          />
-          {errors.organization_name && <span className="field-error">{errors.organization_name[0]}</span>}
+          Name
+          <input value={name} onChange={(e) => setName(e.target.value)} required />
+          {errors.name && <span className="field-error">{errors.name[0]}</span>}
         </label>
 
         <label>
-          Admin Name
-          <input value={adminName} onChange={(e) => setAdminName(e.target.value)} required />
-          {errors.admin_name && <span className="field-error">{errors.admin_name[0]}</span>}
-        </label>
-
-        <label>
-          Admin Email
-          <input
-            type="email"
-            value={adminEmail}
-            onChange={(e) => setAdminEmail(e.target.value)}
-            required
-          />
-          {errors.admin_email && <span className="field-error">{errors.admin_email[0]}</span>}
+          Email
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          {errors.email && <span className="field-error">{errors.email[0]}</span>}
         </label>
 
         <label>
@@ -115,9 +98,6 @@ export default function RegisterPage() {
 
         <p>
           Already have an account? <Link to="/login">Log in</Link>
-        </p>
-        <p>
-          Are you a technician? <Link to="/technician/register">Register here</Link>
         </p>
       </form>
     </div>

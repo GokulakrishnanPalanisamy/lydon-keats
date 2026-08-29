@@ -19,10 +19,8 @@ class OrganizationResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'admin_user_id' => $this->admin_user_id,
+            'admin_id' => $this->admin_id,
             'status' => $this->status,
-//            'created_at' => $this->created_at,
-//            'updated_at' => $this->updated_at,
         ];
     }
 }

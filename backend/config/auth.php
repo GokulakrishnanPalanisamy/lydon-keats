@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\User;
+use App\Models\Admin;
 
 return [
 
@@ -62,9 +62,13 @@ return [
     */
 
     'providers' => [
+        // Not used by the Sanctum bearer-token API flow (which resolves
+        // the account polymorphically from the token itself — see
+        // App\Models\Admin / App\Models\Technician). Kept valid only so
+        // this config doesn't reference a deleted class.
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', User::class),
+            'model' => env('AUTH_MODEL', Admin::class),
         ],
 
         // 'users' => [

@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-#[Fillable(['name', 'status', 'admin_user_id', 'database_host', 'database_name', 'database_username', 'database_password'])]
+#[Fillable(['name', 'status', 'admin_id', 'database_host', 'database_name', 'database_username', 'database_password'])]
 #[Hidden(['database_host', 'database_name', 'database_username', 'database_password'])]
 class Organization extends Model
 {
@@ -27,11 +27,11 @@ class Organization extends Model
 
     public function admin(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'admin_user_id');
+        return $this->belongsTo(Admin::class);
     }
 
-    public function users(): HasMany
+    public function technicians(): BelongsToMany
     {
-        return $this->hasMany(User::class);
+        return $this->belongsToMany(Technician::class, 'technician_organizations')->withTimestamps();
     }
 }

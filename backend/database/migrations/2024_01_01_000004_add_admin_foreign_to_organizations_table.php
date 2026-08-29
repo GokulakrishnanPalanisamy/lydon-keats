@@ -9,14 +9,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::connection('central')->table('organizations', function (Blueprint $table) {
-            $table->foreign('admin_user_id')->references('id')->on('users')->nullOnDelete();
+            $table->foreign('admin_id')->references('id')->on('admins')->nullOnDelete();
         });
     }
 
     public function down(): void
     {
         Schema::connection('central')->table('organizations', function (Blueprint $table) {
-            $table->dropForeign(['admin_user_id']);
+            $table->dropForeign(['admin_id']);
         });
     }
 };

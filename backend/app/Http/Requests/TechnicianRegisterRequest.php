@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Technician;
+use App\Models\Admin;
 use Illuminate\Foundation\Http\FormRequest;
 
-class RegisterRequest extends FormRequest
+class TechnicianRegisterRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -18,14 +18,13 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'organization_name' => ['required', 'string', 'max:255'],
-            'admin_name' => ['required', 'string', 'max:255'],
-            'admin_email' => [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
                 'required', 'string', 'email', 'max:255',
-                'unique:central.admins,email',
+                'unique:central.technicians,email',
                 function ($attribute, $value, $fail) {
-                    if (Technician::where('email', $value)->exists()) {
-                        $fail('The admin email has already been taken.');
+                    if (Admin::where('email', $value)->exists()) {
+                        $fail('The email has already been taken.');
                     }
                 },
             ],

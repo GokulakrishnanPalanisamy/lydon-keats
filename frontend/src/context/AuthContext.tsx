@@ -1,11 +1,18 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { api } from '../api/client'
-import type { AuthResponse, MeResponse, Organization, User } from '../types'
+import type { AuthResponse, AuthState, MeResponse } from '../types'
 
-interface RegisterPayload {
+interface RegisterAdminPayload {
   organization_name: string
   admin_name: string
   admin_email: string
+  password: string
+  password_confirmation: string
+}
+
+interface RegisterTechnicianPayload {
+  name: string
+  email: string
   password: string
   password_confirmation: string
 }
@@ -16,19 +23,26 @@ interface LoginPayload {
 }
 
 interface AuthContextValue {
-  user: User | null
-  organization: Organization | null
+  account: AuthState | null
   loading: boolean
-  register: (payload: RegisterPayload) => Promise<void>
-  login: (payload: LoginPayload) => Promise<void>
+  registerAdmin: (payload: RegisterAdminPayload) => Promise<AuthState>
+  registerTechnician: (payload: RegisterTechnicianPayload) => Promise<AuthState>
+  login: (payload: LoginPayload) => Promise<AuthState>
   logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
+function toAuthState(data: AuthResponse): AuthState {
+  if (data.type === 'admin') {
+    return { type: 'admin', user: data.user, organization: data.organization }
+  }
+
+  return { type: 'technician', user: data.user, organizations: data.organizations }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [organization, setOrganization] = useState<Organization | null>(null)
+  const [account, setAccount] = useState<AuthState | null>(null)
   const [loading, setLoading] = useState(true)
 
   // On first load, if a token is already stored, restore the session.
@@ -42,28 +56,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     api
       .get<MeResponse>('/me')
-      .then((data) => {
-        setUser(data.user)
-        setOrganization(data.organization)
-      })
+      .then((data) => setAccount(data))
       .catch(() => {
         localStorage.removeItem('token')
       })
       .finally(() => setLoading(false))
   }, [])
 
-  async function register(payload: RegisterPayload) {
+  async function registerAdmin(payload: RegisterAdminPayload) {
     const data = await api.post<AuthResponse>('/register', payload)
     localStorage.setItem('token', data.token)
-    setUser(data.user)
-    setOrganization(data.organization)
+    const state = toAuthState(data)
+    setAccount(state)
+    return state
+  }
+
+  async function registerTechnician(payload: RegisterTechnicianPayload) {
+    const data = await api.post<AuthResponse>('/technician/register', payload)
+    localStorage.setItem('token', data.token)
+    const state = toAuthState(data)
+    setAccount(state)
+    return state
   }
 
   async function login(payload: LoginPayload) {
     const data = await api.post<AuthResponse>('/login', payload)
     localStorage.setItem('token', data.token)
-    setUser(data.user)
-    setOrganization(data.organization)
+    const state = toAuthState(data)
+    setAccount(state)
+    return state
   }
 
   async function logout() {
@@ -71,13 +92,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await api.post('/logout')
     } finally {
       localStorage.removeItem('token')
-      setUser(null)
-      setOrganization(null)
+      setAccount(null)
     }
   }
 
   return (
-    <AuthContext.Provider value={{ user, organization, loading, register, login, logout }}>
+    <AuthContext.Provider value={{ account, loading, registerAdmin, registerTechnician, login, logout }}>
       {children}
     </AuthContext.Provider>
   )

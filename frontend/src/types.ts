@@ -10,7 +10,7 @@ export interface Organization {
   status: string
 }
 
-export interface User {
+export interface AdminAccount {
   id: number
   organization_id: number
   name: string
@@ -20,13 +20,19 @@ export interface User {
   role?: Role
 }
 
-export interface AuthResponse {
-  user: User
-  organization: Organization
-  token: string
+export interface TechnicianAccount {
+  id: number
+  name: string
+  email: string
+  role_id: number
+  status: string
+  role?: Role
 }
 
-export interface MeResponse {
-  user: User
-  organization: Organization
-}
+export type AuthState =
+  | { type: 'admin'; user: AdminAccount; organization: Organization }
+  | { type: 'technician'; user: TechnicianAccount; organizations: Organization[] }
+
+export type AuthResponse = AuthState & { token: string }
+
+export type MeResponse = AuthState

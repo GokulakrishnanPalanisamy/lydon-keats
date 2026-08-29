@@ -30,8 +30,8 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      await login(result.data)
-      navigate('/dashboard')
+      const account = await login(result.data)
+      navigate(account.type === 'admin' ? '/dashboard' : '/technician/dashboard')
     } catch (error) {
       if (error instanceof ApiError && error.errors) {
         setErrors(error.errors)
