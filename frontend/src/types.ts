@@ -43,10 +43,18 @@ export interface WorkTag {
   created_at: string
 }
 
+export interface Frequency {
+  id: number
+  name: string
+  description: string | null
+  created_at: string
+}
+
 export interface Task {
   id: number
   name: string
   description: string
   work_tags: WorkTag[]
+  frequency: Frequency | null
   created_at: string
 }

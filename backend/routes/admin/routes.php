@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\FrequencyController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TechnicianController;
 use App\Http\Controllers\WorkTagController;
@@ -20,6 +21,10 @@ Route::middleware(['auth:sanctum', 'tenant', 'tenant.selected', 'admin'])->prefi
     Route::post('/tasks', [TaskController::class, 'store']);
     Route::put('/tasks/{task}', [TaskController::class, 'update']);
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
+
+    Route::post('/frequencies', [FrequencyController::class, 'store']);
+    Route::put('/frequencies/{frequency}', [FrequencyController::class, 'update']);
+    Route::delete('/frequencies/{frequency}', [FrequencyController::class, 'destroy']);
 
     Route::get('/technicians', [TechnicianController::class, 'search']);
     Route::post('/technicians/{technician}/assign', [TechnicianController::class, 'assign']);

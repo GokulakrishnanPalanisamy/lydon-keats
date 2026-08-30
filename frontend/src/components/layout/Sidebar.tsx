@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { ClipboardIcon, HomeIcon, LogoMark, SettingsIcon, TagIcon, UsersIcon } from '../icons/Icons'
+import { ClipboardIcon, HomeIcon, LogoMark, RepeatIcon, SettingsIcon, TagIcon, UsersIcon } from '../icons/Icons'
 
 interface NavItem {
   label: string
@@ -23,6 +23,7 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
           { label: 'Technicians', to: '/admin/technicians', icon: <UsersIcon /> },
           { label: 'Tasks', to: '/admin/tasks', icon: <ClipboardIcon /> },
           { label: 'Work Tags', to: '/admin/work-tags', icon: <TagIcon /> },
+          { label: 'Frequencies', to: '/admin/frequencies', icon: <RepeatIcon /> },
           { label: 'Settings', to: '/settings', icon: <SettingsIcon /> },
         ]
       : [

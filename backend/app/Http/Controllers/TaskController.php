@@ -19,7 +19,7 @@ class TaskController extends Controller
     public function index(): JsonResponse
     {
         return response()->json([
-            'tasks' => TaskResource::collection(Task::with('workTags')->latest()->get()),
+            'tasks' => TaskResource::collection(Task::with(['workTags', 'frequency'])->latest()->get()),
         ]);
     }
 
@@ -34,7 +34,7 @@ class TaskController extends Controller
      */
     public function show(string $task): JsonResponse
     {
-        $model = Task::with('workTags')->findOrFail($task);
+        $model = Task::with(['workTags', 'frequency'])->findOrFail($task);
 
         return response()->json([
             'task' => new TaskResource($model),
@@ -55,6 +55,7 @@ class TaskController extends Controller
                 $task = Task::create([
                     'name' => $data['name'],
                     'description' => $data['description'],
+                    'frequency_id' => $data['frequency_id'],
                 ]);
 
                 $task->workTags()->attach($data['work_tag_ids'] ?? []);
@@ -70,7 +71,7 @@ class TaskController extends Controller
         }
 
         return response()->json([
-            'task' => new TaskResource($task->load('workTags')),
+            'task' => new TaskResource($task->load(['workTags', 'frequency'])),
         ], 201);
     }
 
@@ -84,6 +85,7 @@ class TaskController extends Controller
                 $model->update([
                     'name' => $data['name'],
                     'description' => $data['description'],
+                    'frequency_id' => $data['frequency_id'],
                 ]);
 
                 $model->workTags()->sync($data['work_tag_ids'] ?? []);
@@ -97,7 +99,7 @@ class TaskController extends Controller
         }
 
         return response()->json([
-            'task' => new TaskResource($model->load('workTags')),
+            'task' => new TaskResource($model->load(['workTags', 'frequency'])),
         ]);
     }
 

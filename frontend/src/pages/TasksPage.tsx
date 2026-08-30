@@ -5,19 +5,19 @@ import Badge from '../components/ui/Badge'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
 import EmptyState from '../components/ui/EmptyState'
 import Modal from '../components/ui/Modal'
+import MultiSelectDropdown from '../components/ui/MultiSelectDropdown'
 import Spinner from '../components/ui/Spinner'
 import { ClipboardIcon, PlusIcon } from '../components/icons/Icons'
 import { useToast } from '../context/ToastContext'
 import { formatDate } from '../utils/formatDate'
-import type { Task, WorkTag } from '../types'
-
-const TAG_SEARCH_THRESHOLD = 6
+import type { Frequency, Task, WorkTag } from '../types'
 
 export default function TasksPage() {
   const { notify } = useToast()
 
   const [tasks, setTasks] = useState<Task[]>([])
   const [workTags, setWorkTags] = useState<WorkTag[]>([])
+  const [frequencies, setFrequencies] = useState<Frequency[]>([])
   const [loading, setLoading] = useState(true)
 
   const [formOpen, setFormOpen] = useState(false)
@@ -25,7 +25,7 @@ export default function TasksPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
-  const [tagQuery, setTagQuery] = useState('')
+  const [frequencyId, setFrequencyId] = useState('')
   const [errors, setErrors] = useState<Record<string, string[]>>({})
   const [saving, setSaving] = useState(false)
 
@@ -33,10 +33,15 @@ export default function TasksPage() {
   const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
-    Promise.all([api.get<{ tasks: Task[] }>('/tasks'), api.get<{ work_tags: WorkTag[] }>('/work-tags')])
-      .then(([taskData, tagData]) => {
+    Promise.all([
+      api.get<{ tasks: Task[] }>('/tasks'),
+      api.get<{ work_tags: WorkTag[] }>('/work-tags'),
+      api.get<{ frequencies: Frequency[] }>('/frequencies'),
+    ])
+      .then(([taskData, tagData, frequencyData]) => {
         setTasks(taskData.tasks)
         setWorkTags(tagData.work_tags)
+        setFrequencies(frequencyData.frequencies)
       })
       .catch((error) => notify('error', error instanceof ApiError ? error.message : 'Could not load tasks.'))
       .finally(() => setLoading(false))
@@ -48,7 +53,7 @@ export default function TasksPage() {
     setName('')
     setDescription('')
     setSelectedTagIds([])
-    setTagQuery('')
+    setFrequencyId('')
     setErrors({})
     setFormOpen(true)
   }
@@ -58,15 +63,9 @@ export default function TasksPage() {
     setName(task.name)
     setDescription(task.description)
     setSelectedTagIds(task.work_tags.map((tag) => tag.id))
-    setTagQuery('')
+    setFrequencyId(task.frequency ? String(task.frequency.id) : '')
     setErrors({})
     setFormOpen(true)
-  }
-
-  function toggleTag(tagId: number) {
-    setSelectedTagIds((current) =>
-      current.includes(tagId) ? current.filter((id) => id !== tagId) : [...current, tagId],
-    )
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -74,7 +73,12 @@ export default function TasksPage() {
     setErrors({})
     setSaving(true)
 
-    const payload = { name, description, work_tag_ids: selectedTagIds }
+    const payload = {
+      name,
+      description,
+      work_tag_ids: selectedTagIds,
+      frequency_id: frequencyId === '' ? null : Number(frequencyId),
+    }
 
     try {
       if (editing) {
@@ -117,11 +121,6 @@ export default function TasksPage() {
     }
   }
 
-  const filteredTags =
-    workTags.length > TAG_SEARCH_THRESHOLD && tagQuery.trim() !== ''
-      ? workTags.filter((tag) => tag.name.toLowerCase().includes(tagQuery.trim().toLowerCase()))
-      : workTags
-
   return (
     <DashboardLayout title="Tasks" breadcrumb={['Home', 'Tasks']}>
       <div className="card">
@@ -153,6 +152,7 @@ export default function TasksPage() {
                   <th>Name</th>
                   <th>Description</th>
                   <th>Tags</th>
+                  <th>Frequency</th>
                   <th>Created At</th>
                   <th />
                 </tr>
@@ -174,6 +174,13 @@ export default function TasksPage() {
                           ))
                         )}
                       </div>
+                    </td>
+                    <td>
+                      {task.frequency ? (
+                        <Badge tone="neutral">{task.frequency.name}</Badge>
+                      ) : (
+                        <span className="muted">—</span>
+                      )}
                     </td>
                     <td>{formatDate(task.created_at)}</td>
                     <td>
@@ -217,36 +224,34 @@ export default function TasksPage() {
             {errors.description && <span className="field-error">{errors.description[0]}</span>}
           </label>
 
-          <div className="tag-select">
-            <span className="tag-select-label">Work Tags</span>
+          <label>
+            Work Tags
+            <MultiSelectDropdown
+              options={workTags.map((tag) => ({ id: tag.id, label: tag.name }))}
+              selectedIds={selectedTagIds}
+              onChange={setSelectedTagIds}
+              placeholder="Select Work Tags"
+              emptyMessage="No work tags yet — create one from the Work Tags page first."
+            />
+          </label>
 
-            {workTags.length > TAG_SEARCH_THRESHOLD && (
-              <input
-                type="text"
-                className="tag-select-search"
-                placeholder="Search work tags"
-                value={tagQuery}
-                onChange={(event) => setTagQuery(event.target.value)}
-              />
+          <label>
+            Frequency
+            <select value={frequencyId} onChange={(event) => setFrequencyId(event.target.value)} required>
+              <option value="" disabled>
+                {frequencies.length === 0 ? 'No frequencies yet' : 'Select a frequency'}
+              </option>
+              {frequencies.map((frequency) => (
+                <option key={frequency.id} value={frequency.id}>
+                  {frequency.name}
+                </option>
+              ))}
+            </select>
+            {errors.frequency_id && <span className="field-error">{errors.frequency_id[0]}</span>}
+            {frequencies.length === 0 && (
+              <span className="field-hint">Create a frequency from the Frequencies page first.</span>
             )}
-
-            {workTags.length === 0 ? (
-              <p className="muted">No work tags yet — create one from the Work Tags page first.</p>
-            ) : (
-              <div className="tag-select-options">
-                {filteredTags.map((tag) => {
-                  const checked = selectedTagIds.includes(tag.id)
-
-                  return (
-                    <label key={tag.id} className={`tag-select-option${checked ? ' selected' : ''}`}>
-                      <input type="checkbox" checked={checked} onChange={() => toggleTag(tag.id)} />
-                      {tag.name}
-                    </label>
-                  )
-                })}
-              </div>
-            )}
-          </div>
+          </label>
 
           <div className="modal-actions">
             <button type="button" className="btn btn-ghost" onClick={() => setFormOpen(false)}>

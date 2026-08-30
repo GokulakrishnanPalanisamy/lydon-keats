@@ -831,7 +831,8 @@
 }
 
 .modal-form input,
-.modal-form textarea {
+.modal-form textarea,
+.modal-form select {
   font: inherit;
   padding: 10px 12px;
   border-radius: 6px;
@@ -842,9 +843,15 @@
 }
 
 .modal-form input:focus,
-.modal-form textarea:focus {
+.modal-form textarea:focus,
+.modal-form select:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+
+.field-hint {
+  font-size: 12px;
+  color: var(--text);
 }
 
 .modal-actions {
@@ -854,68 +861,138 @@
   padding-top: 4px;
 }
 
-/* ---------- Tag multi-select ---------- */
+/* ---------- Multi-select dropdown ---------- */
 
-.tag-select {
+.multi-select {
+  position: relative;
+}
+
+.multi-select-trigger {
+  width: 100%;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
-}
-
-.tag-select-label {
-  font-size: 14px;
-  color: var(--text-h);
-  font-weight: 500;
-}
-
-.tag-select-search {
-  font: inherit;
-  padding: 8px 12px;
+  padding: 10px 12px;
   border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text-h);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: left;
 }
 
-.tag-select-search:focus {
+.multi-select-trigger:hover {
+  background: var(--code-bg);
+}
+
+.multi-select-trigger:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
 
-.tag-select-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  max-height: 160px;
-  overflow-y: auto;
-  padding: 4px 2px;
+.multi-select-trigger svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--text);
 }
 
-.tag-select-option {
+.multi-select-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.multi-select-label.placeholder {
+  color: var(--text);
+}
+
+.multi-select-dropdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  z-index: 40;
+}
+
+.multi-select-search {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  font-size: 13px;
-  color: var(--text-h);
-  cursor: pointer;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
 }
 
-.tag-select-option:hover {
+.multi-select-search svg {
+  width: 15px;
+  height: 15px;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.multi-select-search input {
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-h);
+  flex: 1;
+  outline: none;
+}
+
+.multi-select-options {
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.multi-select-option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 6px;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text-h);
+  cursor: pointer;
+  text-align: left;
+}
+
+.multi-select-option:hover {
   background: var(--code-bg);
 }
 
-.tag-select-option.selected {
+.multi-select-option.selected {
   background: var(--accent-bg);
-  border-color: var(--accent-border);
   color: var(--accent);
   font-weight: 600;
 }
 
-.tag-select-option input {
-  accent-color: var(--accent);
+.multi-select-option svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.multi-select-empty {
+  padding: 14px;
+  font-size: 13px;
+  color: var(--text);
+  text-align: center;
 }
 
 /* ---------- Row actions / tag pills (tables) ---------- */

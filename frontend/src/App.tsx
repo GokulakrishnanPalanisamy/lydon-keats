@@ -3,6 +3,7 @@ import './auth.css'
 import './dashboard.css'
 import ProtectedRoute from './components/ProtectedRoute'
 import DashboardPage from './pages/DashboardPage'
+import FrequenciesPage from './pages/FrequenciesPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import SettingsPage from './pages/SettingsPage'
@@ -48,6 +49,14 @@ function App() {
         element={
           <ProtectedRoute role="admin">
             <WorkTagsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/frequencies"
+        element={
+          <ProtectedRoute role="admin">
+            <FrequenciesPage />
           </ProtectedRoute>
         }
       />

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * always queries whichever tenant TenantMiddleware configured for this
  * request, regardless of the app's overall default connection.
  */
-#[Fillable(['name', 'description'])]
+#[Fillable(['name', 'description', 'frequency_id'])]
 class Task extends Model
 {
     protected $connection = 'tenant';
@@ -19,5 +20,10 @@ class Task extends Model
     public function workTags(): BelongsToMany
     {
         return $this->belongsToMany(WorkTag::class, 'task_work_tag')->withTimestamps();
+    }
+
+    public function frequency(): BelongsTo
+    {
+        return $this->belongsTo(Frequency::class);
     }
 }

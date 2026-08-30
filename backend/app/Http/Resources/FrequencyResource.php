@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class TaskResource extends JsonResource
+class FrequencyResource extends JsonResource
 {
     /**
      * @return array<string, mixed>
@@ -16,8 +16,6 @@ class TaskResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'work_tags' => WorkTagResource::collection($this->whenLoaded('workTags')),
-            'frequency' => $this->whenLoaded('frequency', fn () => $this->frequency ? new FrequencyResource($this->frequency) : null),
             'created_at' => $this->created_at,
         ];
     }
