@@ -55,4 +55,6 @@ client.interceptors.response.use(
 export const api = {
   get: <T>(path: string) => client.get<T>(path).then((res) => res.data),
   post: <T>(path: string, body?: unknown) => client.post<T>(path, body).then((res) => res.data),
+  put: <T>(path: string, body?: unknown) => client.put<T>(path, body).then((res) => res.data),
+  delete: <T>(path: string) => client.delete<T>(path).then((res) => res.data),
 }

@@ -36,3 +36,17 @@ export type AuthState =
 export type AuthResponse = AuthState & { token: string }
 
 export type MeResponse = AuthState
+
+export interface WorkTag {
+  id: number
+  name: string
+  created_at: string
+}
+
+export interface Task {
+  id: number
+  name: string
+  description: string
+  work_tags: WorkTag[]
+  created_at: string
+}

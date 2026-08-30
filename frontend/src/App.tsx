@@ -6,9 +6,11 @@ import DashboardPage from './pages/DashboardPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import SettingsPage from './pages/SettingsPage'
+import TasksPage from './pages/TasksPage'
 import TechnicianDashboardPage from './pages/TechnicianDashboardPage'
 import TechnicianRegisterPage from './pages/TechnicianRegisterPage'
 import TechnicianSearchPage from './pages/TechnicianSearchPage'
+import WorkTagsPage from './pages/WorkTagsPage'
 
 function App() {
   return (
@@ -30,6 +32,22 @@ function App() {
         element={
           <ProtectedRoute role="admin">
             <TechnicianSearchPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/tasks"
+        element={
+          <ProtectedRoute role="admin">
+            <TasksPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/work-tags"
+        element={
+          <ProtectedRoute role="admin">
+            <WorkTagsPage />
           </ProtectedRoute>
         }
       />
