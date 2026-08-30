@@ -50,11 +50,24 @@ export interface Frequency {
   created_at: string
 }
 
+export type TimeUnit = 'minutes' | 'hours'
+
+export interface Subtask {
+  id: number
+  name: string
+  description: string | null
+  estimated_time: number
+  estimated_time_unit: TimeUnit
+  sort_order: number
+}
+
 export interface Task {
   id: number
   name: string
   description: string
   work_tags: WorkTag[]
   frequency: Frequency | null
+  subtasks: Subtask[]
+  total_estimated_minutes: number
   created_at: string
 }

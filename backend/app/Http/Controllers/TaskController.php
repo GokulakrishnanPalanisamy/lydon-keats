@@ -19,7 +19,7 @@ class TaskController extends Controller
     public function index(): JsonResponse
     {
         return response()->json([
-            'tasks' => TaskResource::collection(Task::with(['workTags', 'frequency'])->latest()->get()),
+            'tasks' => TaskResource::collection(Task::with(['workTags', 'frequency', 'subtasks'])->latest()->get()),
         ]);
     }
 
@@ -34,7 +34,7 @@ class TaskController extends Controller
      */
     public function show(string $task): JsonResponse
     {
-        $model = Task::with(['workTags', 'frequency'])->findOrFail($task);
+        $model = Task::with(['workTags', 'frequency', 'subtasks'])->findOrFail($task);
 
         return response()->json([
             'task' => new TaskResource($model),
@@ -43,8 +43,8 @@ class TaskController extends Controller
 
     /**
      * Admin-only (enforced by routes/api.php, not just hidden in the UI).
-     * Saves the task and attaches its work tags in one transaction — if
-     * anything fails, neither is left partially created.
+     * Saves the task, its work tags, and its subtasks in one transaction
+     * — if anything fails, nothing is left partially created.
      */
     public function store(TaskRequest $request): JsonResponse
     {
@@ -60,6 +60,8 @@ class TaskController extends Controller
 
                 $task->workTags()->attach($data['work_tag_ids'] ?? []);
 
+                $this->saveSubtasks($task, $data['subtasks']);
+
                 return $task;
             });
         } catch (Throwable $e) {
@@ -71,7 +73,7 @@ class TaskController extends Controller
         }
 
         return response()->json([
-            'task' => new TaskResource($task->load(['workTags', 'frequency'])),
+            'task' => new TaskResource($task->load(['workTags', 'frequency', 'subtasks'])),
         ], 201);
     }
 
@@ -89,6 +91,13 @@ class TaskController extends Controller
                 ]);
 
                 $model->workTags()->sync($data['work_tag_ids'] ?? []);
+
+                // Simplest correct approach: replace the subtask list
+                // wholesale rather than diffing — the frontend always
+                // sends the full desired list (new subtasks don't have
+                // ids yet anyway).
+                $model->subtasks()->delete();
+                $this->saveSubtasks($model, $data['subtasks']);
             });
         } catch (Throwable $e) {
             report($e);
@@ -99,7 +108,7 @@ class TaskController extends Controller
         }
 
         return response()->json([
-            'task' => new TaskResource($model->load(['workTags', 'frequency'])),
+            'task' => new TaskResource($model->load(['workTags', 'frequency', 'subtasks'])),
         ]);
     }
 
@@ -111,5 +120,21 @@ class TaskController extends Controller
         return response()->json([
             'message' => 'Task deleted.',
         ]);
+    }
+
+    /**
+     * @param  array<int, array{name: string, description?: string|null, estimated_time: int, estimated_time_unit: string}>  $subtasks
+     */
+    private function saveSubtasks(Task $task, array $subtasks): void
+    {
+        foreach ($subtasks as $index => $subtask) {
+            $task->subtasks()->create([
+                'name' => $subtask['name'],
+                'description' => $subtask['description'] ?? null,
+                'estimated_time' => $subtask['estimated_time'],
+                'estimated_time_unit' => $subtask['estimated_time_unit'],
+                'sort_order' => $index + 1,
+            ]);
+        }
     }
 }

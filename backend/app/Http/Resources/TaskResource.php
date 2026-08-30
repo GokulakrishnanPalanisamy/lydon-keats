@@ -18,6 +18,8 @@ class TaskResource extends JsonResource
             'description' => $this->description,
             'work_tags' => WorkTagResource::collection($this->whenLoaded('workTags')),
             'frequency' => $this->whenLoaded('frequency', fn () => $this->frequency ? new FrequencyResource($this->frequency) : null),
+            'subtasks' => SubtaskResource::collection($this->whenLoaded('subtasks')),
+            'total_estimated_minutes' => $this->whenLoaded('subtasks', fn () => $this->totalEstimatedMinutes()),
             'created_at' => $this->created_at,
         ];
     }

@@ -6,11 +6,14 @@ export default function Modal({
   title,
   onClose,
   children,
+  wide = false,
 }: {
   open: boolean
   title: string
   onClose: () => void
   children: ReactNode
+  /** Use for forms with more fields than a simple name/description pair. */
+  wide?: boolean
 }) {
   if (!open) {
     return null
@@ -19,7 +22,7 @@ export default function Modal({
   return (
     <div className="dialog-backdrop" onClick={onClose}>
       <div
-        className="dialog modal"
+        className={`dialog modal${wide ? ' modal-wide' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"

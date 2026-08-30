@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class TaskRequest extends FormRequest
 {
@@ -25,6 +26,23 @@ class TaskRequest extends FormRequest
             // reference another organization's work tag or frequency.
             'work_tag_ids.*' => ['integer', 'exists:tenant.work_tags,id'],
             'frequency_id' => ['required', 'integer', 'exists:tenant.frequencies,id'],
+
+            'subtasks' => ['required', 'array', 'min:1'],
+            'subtasks.*.name' => ['required', 'string', 'max:255'],
+            'subtasks.*.description' => ['nullable', 'string'],
+            'subtasks.*.estimated_time' => ['required', 'integer', 'min:1'],
+            'subtasks.*.estimated_time_unit' => ['required', 'string', Rule::in(['minutes', 'hours'])],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'subtasks.required' => 'At least one subtask is required.',
+            'subtasks.min' => 'At least one subtask is required.',
         ];
     }
 }

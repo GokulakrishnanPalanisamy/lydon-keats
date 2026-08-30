@@ -1,16 +1,24 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, ApiError } from '../api/client'
 import DashboardLayout from '../components/layout/DashboardLayout'
-import Badge from '../components/ui/Badge'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
 import EmptyState from '../components/ui/EmptyState'
 import Modal from '../components/ui/Modal'
 import MultiSelectDropdown from '../components/ui/MultiSelectDropdown'
 import Spinner from '../components/ui/Spinner'
-import { ClipboardIcon, PlusIcon } from '../components/icons/Icons'
+import TaskAccordionItem from '../components/tasks/TaskAccordionItem'
+import { ClipboardIcon, PlusIcon, TrashIcon } from '../components/icons/Icons'
 import { useToast } from '../context/ToastContext'
-import { formatDate } from '../utils/formatDate'
+import { formatTotalMinutes } from '../utils/formatDuration'
 import type { Frequency, Task, WorkTag } from '../types'
+
+interface SubtaskFormRow {
+  key: string
+  name: string
+  description: string
+  hours: string
+  minutes: string
+}
 
 export default function TasksPage() {
   const { notify } = useToast()
@@ -26,11 +34,19 @@ export default function TasksPage() {
   const [description, setDescription] = useState('')
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
   const [frequencyId, setFrequencyId] = useState('')
+  const [subtaskRows, setSubtaskRows] = useState<SubtaskFormRow[]>([])
   const [errors, setErrors] = useState<Record<string, string[]>>({})
   const [saving, setSaving] = useState(false)
 
   const [pendingDelete, setPendingDelete] = useState<Task | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  const nextRowKey = useRef(0)
+
+  function newSubtaskRow(): SubtaskFormRow {
+    nextRowKey.current += 1
+    return { key: `row-${nextRowKey.current}`, name: '', description: '', hours: '', minutes: '' }
+  }
 
   useEffect(() => {
     Promise.all([
@@ -54,6 +70,7 @@ export default function TasksPage() {
     setDescription('')
     setSelectedTagIds([])
     setFrequencyId('')
+    setSubtaskRows([newSubtaskRow()])
     setErrors({})
     setFormOpen(true)
   }
@@ -64,13 +81,65 @@ export default function TasksPage() {
     setDescription(task.description)
     setSelectedTagIds(task.work_tags.map((tag) => tag.id))
     setFrequencyId(task.frequency ? String(task.frequency.id) : '')
+    setSubtaskRows(
+      task.subtasks.length > 0
+        ? task.subtasks.map((subtask) => {
+            nextRowKey.current += 1
+            // Normalize whatever unit it was stored in (old data may be
+            // hours-only) into separate hours + minutes for editing.
+            const totalMinutes =
+              subtask.estimated_time_unit === 'hours' ? subtask.estimated_time * 60 : subtask.estimated_time
+
+            return {
+              key: `row-${nextRowKey.current}`,
+              name: subtask.name,
+              description: subtask.description ?? '',
+              hours: String(Math.floor(totalMinutes / 60)),
+              minutes: String(totalMinutes % 60),
+            }
+          })
+        : [newSubtaskRow()],
+    )
     setErrors({})
     setFormOpen(true)
   }
 
+  function addSubtaskRow() {
+    setSubtaskRows((current) => [...current, newSubtaskRow()])
+  }
+
+  function updateSubtaskRow(key: string, patch: Partial<SubtaskFormRow>) {
+    setSubtaskRows((current) => current.map((row) => (row.key === key ? { ...row, ...patch } : row)))
+  }
+
+  function removeSubtaskRow(key: string) {
+    if (subtaskRows.length <= 1) {
+      notify('error', 'A task must contain at least one subtask.')
+      return
+    }
+    setSubtaskRows((current) => current.filter((row) => row.key !== key))
+  }
+
+  function subtaskRowMinutes(row: SubtaskFormRow): number {
+    return (Number(row.hours) || 0) * 60 + (Number(row.minutes) || 0)
+  }
+
+  const formTotalMinutes = subtaskRows.reduce((sum, row) => sum + subtaskRowMinutes(row), 0)
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     setErrors({})
+
+    if (subtaskRows.length === 0) {
+      notify('error', 'At least one subtask is required.')
+      return
+    }
+
+    if (subtaskRows.some((row) => subtaskRowMinutes(row) <= 0)) {
+      notify('error', 'Enter an estimated time (hours and/or minutes) for every subtask.')
+      return
+    }
+
     setSaving(true)
 
     const payload = {
@@ -78,6 +147,15 @@ export default function TasksPage() {
       description,
       work_tag_ids: selectedTagIds,
       frequency_id: frequencyId === '' ? null : Number(frequencyId),
+      subtasks: subtaskRows.map((row) => ({
+        name: row.name,
+        description: row.description.trim() === '' ? null : row.description,
+        // Hours + minutes are combined into one total (e.g. 1h30m -> 90)
+        // and always stored in minutes — see formatDuration for how this
+        // is displayed back as combined hours/minutes regardless of unit.
+        estimated_time: subtaskRowMinutes(row),
+        estimated_time_unit: 'minutes',
+      })),
     }
 
     try {
@@ -94,6 +172,10 @@ export default function TasksPage() {
     } catch (error) {
       if (error instanceof ApiError && error.errors) {
         setErrors(error.errors)
+        const subtaskErrorKey = Object.keys(error.errors).find((key) => key.startsWith('subtasks'))
+        if (subtaskErrorKey) {
+          notify('error', error.errors[subtaskErrorKey][0])
+        }
       } else {
         notify('error', error instanceof ApiError ? error.message : 'Something went wrong.')
       }
@@ -137,7 +219,7 @@ export default function TasksPage() {
           <EmptyState
             icon={<ClipboardIcon />}
             title="No tasks yet"
-            description="Create your first task and tag it with the relevant work tags."
+            description="Create your first task, break it into subtasks, and tag it with the relevant work tags."
             action={
               <button type="button" className="btn btn-primary btn-sm" onClick={openCreate}>
                 Create Task
@@ -145,67 +227,21 @@ export default function TasksPage() {
             }
           />
         ) : (
-          <div className="table-wrapper">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Description</th>
-                  <th>Tags</th>
-                  <th>Frequency</th>
-                  <th>Created At</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {tasks.map((task) => (
-                  <tr key={task.id}>
-                    <td>{task.name}</td>
-                    <td className="truncate">{task.description}</td>
-                    <td>
-                      <div className="tag-pills">
-                        {task.work_tags.length === 0 ? (
-                          <span className="muted">—</span>
-                        ) : (
-                          task.work_tags.map((tag) => (
-                            <Badge key={tag.id} tone="neutral">
-                              {tag.name}
-                            </Badge>
-                          ))
-                        )}
-                      </div>
-                    </td>
-                    <td>
-                      {task.frequency ? (
-                        <Badge tone="neutral">{task.frequency.name}</Badge>
-                      ) : (
-                        <span className="muted">—</span>
-                      )}
-                    </td>
-                    <td>{formatDate(task.created_at)}</td>
-                    <td>
-                      <div className="row-actions">
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => openEdit(task)}>
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-ghost btn-sm btn-danger-text"
-                          onClick={() => setPendingDelete(task)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="task-accordion-list">
+            {tasks.map((task, taskIndex) => (
+              <TaskAccordionItem
+                key={task.id}
+                task={task}
+                index={taskIndex + 1}
+                onEdit={() => openEdit(task)}
+                onDelete={() => setPendingDelete(task)}
+              />
+            ))}
           </div>
         )}
       </div>
 
-      <Modal open={formOpen} title={editing ? 'Edit Task' : 'Create Task'} onClose={() => setFormOpen(false)}>
+      <Modal open={formOpen} title={editing ? 'Edit Task' : 'Create Task'} onClose={() => setFormOpen(false)} wide>
         <form onSubmit={handleSubmit} className="modal-form">
           <label>
             Name
@@ -218,7 +254,7 @@ export default function TasksPage() {
             <textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              rows={4}
+              rows={3}
               required
             />
             {errors.description && <span className="field-error">{errors.description[0]}</span>}
@@ -251,6 +287,70 @@ export default function TasksPage() {
             {frequencies.length === 0 && (
               <span className="field-hint">Create a frequency from the Frequencies page first.</span>
             )}
+          </label>
+
+          <label>
+            Subtasks
+            {errors.subtasks && <span className="field-error">{errors.subtasks[0]}</span>}
+            <div className="subtask-form-list">
+              {subtaskRows.map((row, rowIndex) => (
+                <div key={row.key} className="subtask-form-card">
+                  <div className="subtask-form-card-header">
+                    <span className="subtask-form-card-title">Subtask {rowIndex + 1}</span>
+                    <button
+                      type="button"
+                      className="subtask-form-remove"
+                      onClick={() => removeSubtaskRow(row.key)}
+                    >
+                      <TrashIcon /> Remove
+                    </button>
+                  </div>
+
+                  <input
+                    className="subtask-form-name"
+                    placeholder="Subtask name"
+                    value={row.name}
+                    onChange={(event) => updateSubtaskRow(row.key, { name: event.target.value })}
+                    required
+                  />
+
+                  <input
+                    className="subtask-form-description"
+                    placeholder="Description (optional)"
+                    value={row.description}
+                    onChange={(event) => updateSubtaskRow(row.key, { description: event.target.value })}
+                  />
+
+                  <div className="subtask-form-time-row">
+                    <label className="subtask-form-time-field">
+                      Hours
+                      <input
+                        type="number"
+                        min={0}
+                        value={row.hours}
+                        onChange={(event) => updateSubtaskRow(row.key, { hours: event.target.value })}
+                      />
+                    </label>
+                    <label className="subtask-form-time-field">
+                      Minutes
+                      <input
+                        type="number"
+                        min={0}
+                        max={59}
+                        value={row.minutes}
+                        onChange={(event) => updateSubtaskRow(row.key, { minutes: event.target.value })}
+                      />
+                    </label>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button type="button" className="btn btn-secondary btn-sm" onClick={addSubtaskRow}>
+              <PlusIcon /> Add Subtask
+            </button>
+
+            <div className="subtask-form-total">Total Estimated Time: {formatTotalMinutes(formTotalMinutes)}</div>
           </label>
 
           <div className="modal-actions">

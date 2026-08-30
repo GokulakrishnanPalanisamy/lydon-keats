@@ -776,8 +776,15 @@
 
 .modal {
   max-width: 480px;
+  max-height: 85vh;
   padding: 0;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
+}
+
+.modal-wide {
+  max-width: 640px;
 }
 
 .modal-header {
@@ -787,6 +794,7 @@
   gap: 12px;
   padding: 18px 20px;
   border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .modal-header h3 {
@@ -820,6 +828,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  overflow-y: auto;
 }
 
 .modal-form label {
@@ -1017,6 +1026,283 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+/* ---------- Task accordion ---------- */
+
+.task-accordion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.task-accordion-item {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.task-accordion-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.task-accordion-header:hover {
+  background: var(--code-bg);
+}
+
+.task-accordion-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-accordion-number {
+  color: var(--accent);
+  margin-right: 4px;
+}
+
+.task-accordion-toggle {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent-bg);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.task-accordion-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.task-accordion-body {
+  padding: 0 20px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.task-accordion-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 16px;
+}
+
+.task-accordion-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text);
+}
+
+.task-accordion-row p {
+  margin: 0;
+  color: var(--text-h);
+  font-size: 14px;
+}
+
+.subtask-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.subtask-list-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  font-size: 14px;
+  background: var(--bg);
+}
+
+.subtask-list-item:not(:last-child) {
+  border-bottom: 1px solid var(--border);
+}
+
+.subtask-list-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.subtask-number {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.subtask-name {
+  flex: 1;
+  color: var(--text-h);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subtask-time {
+  flex-shrink: 0;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.subtask-description {
+  margin: 0;
+  padding-left: 30px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.task-accordion-total {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.task-accordion-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  padding-top: 16px;
+}
+
+/* ---------- Subtask form (inside the task modal) ---------- */
+
+.subtask-form-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.subtask-form-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--code-bg);
+}
+
+.subtask-form-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.subtask-form-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text);
+}
+
+.subtask-form-name,
+.subtask-form-description {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.subtask-form-name:focus,
+.subtask-form-description:focus,
+.subtask-form-time-field input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.subtask-form-time-row {
+  display: flex;
+  gap: 12px;
+}
+
+.subtask-form-time-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.subtask-form-time-field input {
+  width: 80px;
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.subtask-form-remove {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  cursor: pointer;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 12px;
+}
+
+.subtask-form-remove:hover {
+  background: rgba(224, 48, 78, 0.1);
+  border-color: rgba(224, 48, 78, 0.4);
+  color: #e0304e;
+}
+
+.subtask-form-remove svg {
+  width: 14px;
+  height: 14px;
+}
+
+.subtask-form-total {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-h);
+  padding: 8px 0 0;
 }
 
 /* ---------- Toasts ---------- */
