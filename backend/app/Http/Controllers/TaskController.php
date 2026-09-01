@@ -12,29 +12,23 @@ use Throwable;
 class TaskController extends Controller
 {
     /**
-     * List tasks for the currently selected organization's tenant
-     * database. Readable by admins and technicians (with a selected
-     * organization) alike — see routes/api.php.
+     * To get all the tasks (organization will be assigned in middleware)
      */
     public function index(): JsonResponse
     {
         return response()->json([
-            'tasks' => TaskResource::collection(Task::with(['workTags', 'frequency', 'subtasks'])->latest()->get()),
+            'tasks' => TaskResource::collection(
+                Task::with(['workTags', 'frequency', 'subtasks', 'taskTechnicians'])->latest()->get()
+            ),
         ]);
     }
 
     /**
-     * Note: {task} is resolved manually (findOrFail) rather than via
-     * implicit route-model-binding. Laravel resolves implicit bindings in
-     * SubstituteBindings, which runs before this route's own 'tenant'
-     * middleware — too early for a model pinned to the "tenant"
-     * connection, since that connection isn't configured yet at that
-     * point. Resolving it here instead, inside the action, guarantees the
-     * tenant connection is already set up first.
+     * To get the single task (organization will be assigned in middleware)
      */
     public function show(string $task): JsonResponse
     {
-        $model = Task::with(['workTags', 'frequency', 'subtasks'])->findOrFail($task);
+        $model = Task::with(['workTags', 'frequency', 'subtasks', 'taskTechnicians'])->findOrFail($task);
 
         return response()->json([
             'task' => new TaskResource($model),
@@ -42,9 +36,7 @@ class TaskController extends Controller
     }
 
     /**
-     * Admin-only (enforced by routes/api.php, not just hidden in the UI).
-     * Saves the task, its work tags, and its subtasks in one transaction
-     * — if anything fails, nothing is left partially created.
+     * To store the task (with its worktags, subtasks, technicians)
      */
     public function store(TaskRequest $request): JsonResponse
     {
@@ -62,6 +54,8 @@ class TaskController extends Controller
 
                 $this->saveSubtasks($task, $data['subtasks']);
 
+                $this->syncTechnicians($task, $data['technician_ids'] ?? []);
+
                 return $task;
             });
         } catch (Throwable $e) {
@@ -73,10 +67,13 @@ class TaskController extends Controller
         }
 
         return response()->json([
-            'task' => new TaskResource($task->load(['workTags', 'frequency', 'subtasks'])),
+            'task' => new TaskResource($task->load(['workTags', 'frequency', 'subtasks', 'taskTechnicians'])),
         ], 201);
     }
 
+    /**
+     * To update the task
+     */
     public function update(TaskRequest $request, string $task): JsonResponse
     {
         $model = Task::findOrFail($task);
@@ -92,12 +89,11 @@ class TaskController extends Controller
 
                 $model->workTags()->sync($data['work_tag_ids'] ?? []);
 
-                // Simplest correct approach: replace the subtask list
-                // wholesale rather than diffing — the frontend always
-                // sends the full desired list (new subtasks don't have
-                // ids yet anyway).
+                // deleting the subtask and saving the new (approach for performance)
                 $model->subtasks()->delete();
                 $this->saveSubtasks($model, $data['subtasks']);
+
+                $this->syncTechnicians($model, $data['technician_ids'] ?? []);
             });
         } catch (Throwable $e) {
             report($e);
@@ -108,10 +104,13 @@ class TaskController extends Controller
         }
 
         return response()->json([
-            'task' => new TaskResource($model->load(['workTags', 'frequency', 'subtasks'])),
+            'task' => new TaskResource($model->load(['workTags', 'frequency', 'subtasks', 'taskTechnicians'])),
         ]);
     }
 
+    /**
+     * To delete Task.
+     */
     public function destroy(string $task): JsonResponse
     {
         $model = Task::findOrFail($task);
@@ -134,6 +133,26 @@ class TaskController extends Controller
                 'estimated_time' => $subtask['estimated_time'],
                 'estimated_time_unit' => $subtask['estimated_time_unit'],
                 'sort_order' => $index + 1,
+            ]);
+        }
+    }
+
+    /**
+     * To sync task and technicians ids.
+     *
+     * @param  array<int, int>  $technicianIds
+     */
+    private function syncTechnicians(Task $task, array $technicianIds): void
+    {
+        $existingIds = $task->taskTechnicians()->pluck('technician_id')->all();
+
+        $task->taskTechnicians()->whereNotIn('technician_id', $technicianIds)->delete();
+
+        foreach (array_diff($technicianIds, $existingIds) as $technicianId) {
+            $task->taskTechnicians()->create([
+                'technician_id' => $technicianId,
+                'status' => 'assigned',
+                'assigned_at' => now(),
             ]);
         }
     }

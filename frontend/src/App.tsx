@@ -11,6 +11,8 @@ import TasksPage from './pages/TasksPage'
 import TechnicianDashboardPage from './pages/TechnicianDashboardPage'
 import TechnicianRegisterPage from './pages/TechnicianRegisterPage'
 import TechnicianSearchPage from './pages/TechnicianSearchPage'
+import TechnicianTaskDetailPage from './pages/TechnicianTaskDetailPage'
+import TechnicianTasksPage from './pages/TechnicianTasksPage'
 import WorkTagsPage from './pages/WorkTagsPage'
 
 function App() {
@@ -65,6 +67,22 @@ function App() {
         element={
           <ProtectedRoute role="technician">
             <TechnicianDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/technician/tasks"
+        element={
+          <ProtectedRoute role="technician">
+            <TechnicianTasksPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/technician/tasks/:taskId"
+        element={
+          <ProtectedRoute role="technician">
+            <TechnicianTaskDetailPage />
           </ProtectedRoute>
         }
       />

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureAdmin;
+use App\Http\Middleware\EnsureTechnician;
 use App\Http\Middleware\EnsureTenantConnected;
 use App\Http\Middleware\TenantMiddleware;
 use Illuminate\Foundation\Application;
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'tenant' => TenantMiddleware::class,
             'admin' => EnsureAdmin::class,
+            'technician' => EnsureTechnician::class,
             'tenant.selected' => EnsureTenantConnected::class,
         ]);
     })

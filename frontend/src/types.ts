@@ -69,5 +69,37 @@ export interface Task {
   frequency: Frequency | null
   subtasks: Subtask[]
   total_estimated_minutes: number
+  /** Ids only — the admin frontend resolves these against its own already-fetched technician list. */
+  technician_ids: number[]
   created_at: string
+}
+
+export type TaskStatus = 'assigned' | 'in_progress' | 'completed'
+
+export interface TechnicianTask {
+  id: number
+  name: string
+  description: string
+  frequency: Frequency | null
+  work_tags: WorkTag[]
+  subtasks: Subtask[]
+  subtasks_count: number
+  total_estimated_minutes: number
+  status: TaskStatus
+  assigned_at: string | null
+  created_at: string
+}
+
+export interface PaginationMeta {
+  current_page: number
+  last_page: number
+  total: number
+}
+
+/** A technician as returned by the admin's technician search endpoint. */
+export interface TechnicianSummary {
+  id: number
+  name: string
+  email: string
+  organizations?: Organization[]
 }

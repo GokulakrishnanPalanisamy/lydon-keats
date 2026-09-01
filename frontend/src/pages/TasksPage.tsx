@@ -8,9 +8,10 @@ import MultiSelectDropdown from '../components/ui/MultiSelectDropdown'
 import Spinner from '../components/ui/Spinner'
 import TaskAccordionItem from '../components/tasks/TaskAccordionItem'
 import { ClipboardIcon, PlusIcon, TrashIcon } from '../components/icons/Icons'
+import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { formatTotalMinutes } from '../utils/formatDuration'
-import type { Frequency, Task, WorkTag } from '../types'
+import type { Frequency, Task, TechnicianSummary, WorkTag } from '../types'
 
 interface SubtaskFormRow {
   key: string
@@ -21,11 +22,13 @@ interface SubtaskFormRow {
 }
 
 export default function TasksPage() {
+  const { account } = useAuth()
   const { notify } = useToast()
 
   const [tasks, setTasks] = useState<Task[]>([])
   const [workTags, setWorkTags] = useState<WorkTag[]>([])
   const [frequencies, setFrequencies] = useState<Frequency[]>([])
+  const [technicians, setTechnicians] = useState<TechnicianSummary[]>([])
   const [loading, setLoading] = useState(true)
 
   const [formOpen, setFormOpen] = useState(false)
@@ -35,6 +38,7 @@ export default function TasksPage() {
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
   const [frequencyId, setFrequencyId] = useState('')
   const [subtaskRows, setSubtaskRows] = useState<SubtaskFormRow[]>([])
+  const [selectedTechnicianIds, setSelectedTechnicianIds] = useState<number[]>([])
   const [errors, setErrors] = useState<Record<string, string[]>>({})
   const [saving, setSaving] = useState(false)
 
@@ -49,15 +53,29 @@ export default function TasksPage() {
   }
 
   useEffect(() => {
+    if (!account || account.type !== 'admin') {
+      return
+    }
+
     Promise.all([
       api.get<{ tasks: Task[] }>('/tasks'),
       api.get<{ work_tags: WorkTag[] }>('/work-tags'),
       api.get<{ frequencies: Frequency[] }>('/frequencies'),
+      // Same pattern as the admin dashboard: technician search with no
+      // query returns every technician system-wide, filtered here to
+      // just this organization's — there's no dedicated "my org's
+      // technicians" endpoint, and this one already has what's needed.
+      api.get<{ technicians: TechnicianSummary[] }>('/admin/technicians?search='),
     ])
-      .then(([taskData, tagData, frequencyData]) => {
+      .then(([taskData, tagData, frequencyData, technicianData]) => {
         setTasks(taskData.tasks)
         setWorkTags(tagData.work_tags)
         setFrequencies(frequencyData.frequencies)
+        setTechnicians(
+          technicianData.technicians.filter((technician) =>
+            technician.organizations?.some((organization) => organization.id === account.organization.id),
+          ),
+        )
       })
       .catch((error) => notify('error', error instanceof ApiError ? error.message : 'Could not load tasks.'))
       .finally(() => setLoading(false))
@@ -71,6 +89,7 @@ export default function TasksPage() {
     setSelectedTagIds([])
     setFrequencyId('')
     setSubtaskRows([newSubtaskRow()])
+    setSelectedTechnicianIds([])
     setErrors({})
     setFormOpen(true)
   }
@@ -100,6 +119,7 @@ export default function TasksPage() {
           })
         : [newSubtaskRow()],
     )
+    setSelectedTechnicianIds(task.technician_ids)
     setErrors({})
     setFormOpen(true)
   }
@@ -156,6 +176,7 @@ export default function TasksPage() {
         estimated_time: subtaskRowMinutes(row),
         estimated_time_unit: 'minutes',
       })),
+      technician_ids: selectedTechnicianIds,
     }
 
     try {
@@ -172,9 +193,11 @@ export default function TasksPage() {
     } catch (error) {
       if (error instanceof ApiError && error.errors) {
         setErrors(error.errors)
-        const subtaskErrorKey = Object.keys(error.errors).find((key) => key.startsWith('subtasks'))
-        if (subtaskErrorKey) {
-          notify('error', error.errors[subtaskErrorKey][0])
+        const nestedErrorKey = Object.keys(error.errors).find(
+          (key) => key.startsWith('subtasks') || key.startsWith('technician_ids'),
+        )
+        if (nestedErrorKey) {
+          notify('error', error.errors[nestedErrorKey][0])
         }
       } else {
         notify('error', error instanceof ApiError ? error.message : 'Something went wrong.')
@@ -233,6 +256,7 @@ export default function TasksPage() {
                 key={task.id}
                 task={task}
                 index={taskIndex + 1}
+                technicians={technicians}
                 onEdit={() => openEdit(task)}
                 onDelete={() => setPendingDelete(task)}
               />
@@ -287,6 +311,18 @@ export default function TasksPage() {
             {frequencies.length === 0 && (
               <span className="field-hint">Create a frequency from the Frequencies page first.</span>
             )}
+          </label>
+
+          <label>
+            Assign Technicians
+            <MultiSelectDropdown
+              options={technicians.map((technician) => ({ id: technician.id, label: technician.name }))}
+              selectedIds={selectedTechnicianIds}
+              onChange={setSelectedTechnicianIds}
+              placeholder="Select Technicians"
+              emptyMessage="No technicians in your organization yet — assign one from the Technicians page first."
+            />
+            {errors.technician_ids && <span className="field-error">{errors.technician_ids[0]}</span>}
           </label>
 
           <label>

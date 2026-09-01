@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Technician;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -32,6 +33,27 @@ class TaskRequest extends FormRequest
             'subtasks.*.description' => ['nullable', 'string'],
             'subtasks.*.estimated_time' => ['required', 'integer', 'min:1'],
             'subtasks.*.estimated_time_unit' => ['required', 'string', Rule::in(['minutes', 'hours'])],
+
+            'technician_ids' => ['sometimes', 'array'],
+            'technician_ids.*' => [
+                'integer',
+                // Technician lives in the central database, so this can't
+                // be a plain exists:tenant.* rule. Checked explicitly
+                // instead: the technician must be a real account AND
+                // already assigned to the authenticated admin's own
+                // organization — never trust an id alone.
+                function ($attribute, $value, $fail) {
+                    $organizationId = $this->user()->organization_id;
+
+                    $belongs = Technician::where('id', $value)
+                        ->whereHas('organizations', fn ($query) => $query->where('organizations.id', $organizationId))
+                        ->exists();
+
+                    if (! $belongs) {
+                        $fail('The selected technician is not assigned to your organization.');
+                    }
+                },
+            ],
         ];
     }
 

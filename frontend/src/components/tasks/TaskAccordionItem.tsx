@@ -2,16 +2,19 @@ import { useState } from 'react'
 import Badge from '../ui/Badge'
 import { MinusIcon, PlusIcon } from '../icons/Icons'
 import { formatDuration, formatTotalMinutes } from '../../utils/formatDuration'
-import type { Task } from '../../types'
+import type { Task, TechnicianSummary } from '../../types'
 
 export default function TaskAccordionItem({
   task,
   index,
+  technicians,
   onEdit,
   onDelete,
 }: {
   task: Task
   index: number
+  /** Full org technician list, used to resolve task.technician_ids into names. */
+  technicians: TechnicianSummary[]
   onEdit: () => void
   onDelete: () => void
 }) {
@@ -61,6 +64,24 @@ export default function TaskAccordionItem({
                 <Badge tone="neutral">{task.frequency.name}</Badge>
               ) : (
                 <span className="muted">—</span>
+              )}
+            </div>
+          </div>
+
+          <div className="task-accordion-row">
+            <span className="task-accordion-label">Assigned Technicians</span>
+            <div className="tag-pills">
+              {task.technician_ids.length === 0 ? (
+                <span className="muted">Unassigned</span>
+              ) : (
+                task.technician_ids.map((technicianId) => {
+                  const technician = technicians.find((candidate) => candidate.id === technicianId)
+                  return (
+                    <Badge key={technicianId} tone="neutral">
+                      {technician?.name ?? `Technician #${technicianId}`}
+                    </Badge>
+                  )
+                })
               )}
             </div>
           </div>

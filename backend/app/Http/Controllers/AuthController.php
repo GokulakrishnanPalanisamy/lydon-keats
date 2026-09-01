@@ -25,25 +25,26 @@ class AuthController extends Controller
     }
 
     /**
-     * Register a new organization together with its admin account, then
-     * provision a dedicated tenant database for it.
+     * Registering new Organization with Admin User
+     * and creating tenant database
      */
     public function register(RegisterRequest $request): JsonResponse
     {
         $data = $request->validated();
 
-        // Step 1: create the organization + admin in the central database.
-        // This part is truly transactional (plain INSERT/UPDATE statements
-        // only), so it either fully commits or fully rolls back.
+        // phase:1 central database register
         try {
             [$organization, $admin] = DB::connection('central')->transaction(function () use ($data) {
+                // step:1 creating the organization first
                 $organization = Organization::create([
                     'name' => $data['organization_name'],
                     'status' => 'active',
                 ]);
 
+                // step:2 getting admin role to assign for organization.
                 $adminRole = Role::where('slug', 'admin')->firstOrFail();
 
+                // step:3 creating admin user
                 $admin = Admin::create([
                     'organization_id' => $organization->id,
                     'name' => $data['admin_name'],
@@ -65,10 +66,7 @@ class AuthController extends Controller
             ], 500);
         }
 
-        // Step 2: provision the tenant database. "CREATE DATABASE" and the
-        // migration runner are DDL statements, which MySQL always
-        // auto-commits — they cannot be part of the transaction above. If
-        // anything here fails, we clean up manually instead.
+        // phase:2 creating tenant database
         $databaseName = $this->tenantService->generateDatabaseName($organization);
 
         try {
@@ -150,11 +148,7 @@ class AuthController extends Controller
         return response()->json(['message' => 'Logged out successfully.']);
     }
 
-    /**
-     * Return the authenticated account. The shape differs depending on
-     * whether it's an admin (single organization) or a technician
-     * (zero or more assigned organizations).
-     */
+
     public function me(Request $request): JsonResponse
     {
         $account = $request->user();
@@ -180,10 +174,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Fetch a technician's assigned organizations via a fresh query
-     * (rather than $technician->organizations) so the relation never gets
-     * cached onto the $account instance that TechnicianResource also
-     * serializes elsewhere in the same response.
+     * To fetch the Technicians organizations.
      */
     private function technicianOrganizations(Technician $technician)
     {

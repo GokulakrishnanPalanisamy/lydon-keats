@@ -8,11 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-/**
- * Lives in the tenant database (never central) — pinned explicitly so it
- * always queries whichever tenant TenantMiddleware configured for this
- * request, regardless of the app's overall default connection.
- */
+
 #[Fillable(['name', 'description', 'frequency_id'])]
 class Task extends Model
 {
@@ -33,11 +29,13 @@ class Task extends Model
         return $this->hasMany(Subtask::class)->orderBy('sort_order');
     }
 
-    /**
-     * Sums subtask estimated times, normalized to minutes. Requires
-     * "subtasks" to already be loaded (e.g. via with('subtasks')) —
-     * otherwise this lazy-loads it on demand.
-     */
+
+    public function taskTechnicians(): HasMany
+    {
+        return $this->hasMany(TaskTechnician::class);
+    }
+
+
     public function totalEstimatedMinutes(): int
     {
         return $this->subtasks->sum(fn (Subtask $subtask) => $subtask->estimated_time_unit === 'hours'

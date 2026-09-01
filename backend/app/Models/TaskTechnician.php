@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-
-#[Fillable(['task_id', 'name', 'description', 'estimated_time', 'estimated_time_unit', 'sort_order'])]
-class Subtask extends Model
+#[Fillable(['task_id', 'technician_id', 'status', 'assigned_at'])]
+class TaskTechnician extends Model
 {
     protected $connection = 'tenant';
+
+    protected $table = 'task_technician';
 
     /**
      * @return array<string, string>
@@ -18,8 +19,7 @@ class Subtask extends Model
     protected function casts(): array
     {
         return [
-            'estimated_time' => 'integer',
-            'sort_order' => 'integer',
+            'assigned_at' => 'datetime',
         ];
     }
 

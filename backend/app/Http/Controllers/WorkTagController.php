@@ -10,9 +10,7 @@ use Illuminate\Http\JsonResponse;
 class WorkTagController extends Controller
 {
     /**
-     * List work tags for the currently selected organization's tenant
-     * database. Readable by admins and technicians (with a selected
-     * organization) alike — see routes/api.php.
+     * To fetch all worktags. (organization will be assigned in middleware)
      */
     public function index(): JsonResponse
     {
@@ -22,13 +20,7 @@ class WorkTagController extends Controller
     }
 
     /**
-     * Note: {workTag} is resolved manually (findOrFail) rather than via
-     * implicit route-model-binding. Laravel resolves implicit bindings in
-     * SubstituteBindings, which runs before this route's own 'tenant'
-     * middleware — too early for a model pinned to the "tenant"
-     * connection, since that connection isn't configured yet at that
-     * point. Resolving it here instead, inside the action, guarantees the
-     * tenant connection is already set up first.
+     * To fetch single worktags. (organization will be assigned in middleware)
      */
     public function show(string $workTag): JsonResponse
     {
@@ -40,7 +32,7 @@ class WorkTagController extends Controller
     }
 
     /**
-     * Admin-only (enforced by routes/api.php, not just hidden in the UI).
+     * To store the worktag. (organization will be assigned in middleware)
      */
     public function store(WorkTagRequest $request): JsonResponse
     {
@@ -51,6 +43,9 @@ class WorkTagController extends Controller
         ], 201);
     }
 
+    /**
+     * To update the worktags. (organization will be assigned in middleware)
+     */
     public function update(WorkTagRequest $request, string $workTag): JsonResponse
     {
         $model = WorkTag::findOrFail($workTag);
@@ -61,6 +56,9 @@ class WorkTagController extends Controller
         ]);
     }
 
+    /**
+     * To delete the worktags. (organization will be assigned in middleware)
+     */
     public function destroy(string $workTag): JsonResponse
     {
         $model = WorkTag::findOrFail($workTag);

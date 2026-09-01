@@ -1305,6 +1305,152 @@
   padding: 8px 0 0;
 }
 
+/* ---------- Technician: My Tasks ---------- */
+
+.switching-organization {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 0;
+  text-align: center;
+}
+
+.task-filters {
+  margin-bottom: 20px;
+}
+
+.task-filters .search-bar {
+  margin-bottom: 16px;
+}
+
+.task-filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.task-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-h);
+  min-width: 160px;
+  flex: 1 1 160px;
+}
+
+.task-filter-field select {
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.task-filter-field select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.technician-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.technician-task-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.technician-task-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.technician-task-card-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-h);
+}
+
+.technician-task-card-description {
+  margin: 0;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.technician-task-card-meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin: 0;
+}
+
+.technician-task-card-meta dt {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.technician-task-card-meta dd {
+  margin: 0;
+  color: var(--text-h);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.technician-task-card-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding-top: 20px;
+}
+
+.task-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 720px;
+}
+
+.task-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+.task-detail-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--text-h);
+}
+
+.task-detail-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-top: 20px;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
 /* ---------- Toasts ---------- */
 
 .toast-container {

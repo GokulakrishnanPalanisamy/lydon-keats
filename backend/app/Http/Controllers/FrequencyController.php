@@ -9,11 +9,7 @@ use Illuminate\Http\JsonResponse;
 
 class FrequencyController extends Controller
 {
-    /**
-     * List frequencies for the currently selected organization's tenant
-     * database. Readable by admins and technicians (with a selected
-     * organization) alike — see routes/common/routes.php.
-     */
+
     public function index(): JsonResponse
     {
         return response()->json([
@@ -21,15 +17,7 @@ class FrequencyController extends Controller
         ]);
     }
 
-    /**
-     * Note: {frequency} is resolved manually (findOrFail) rather than via
-     * implicit route-model-binding. Laravel resolves implicit bindings in
-     * SubstituteBindings, which runs before this route's own 'tenant'
-     * middleware — too early for a model pinned to the "tenant"
-     * connection, since that connection isn't configured yet at that
-     * point. Resolving it here instead, inside the action, guarantees the
-     * tenant connection is already set up first.
-     */
+
     public function show(string $frequency): JsonResponse
     {
         $model = Frequency::findOrFail($frequency);
@@ -39,9 +27,7 @@ class FrequencyController extends Controller
         ]);
     }
 
-    /**
-     * Admin-only (enforced by routes/admin/routes.php, not just hidden in the UI).
-     */
+
     public function store(FrequencyRequest $request): JsonResponse
     {
         $frequency = Frequency::create($request->validated());
@@ -61,10 +47,7 @@ class FrequencyController extends Controller
         ]);
     }
 
-    /**
-     * Refuses to delete a frequency that's still assigned to tasks,
-     * rather than silently orphaning them.
-     */
+
     public function destroy(string $frequency): JsonResponse
     {
         $model = Frequency::findOrFail($frequency);

@@ -28,6 +28,7 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
         ]
       : [
           { label: 'Dashboard', to: '/technician/dashboard', icon: <HomeIcon /> },
+          { label: 'My Tasks', to: '/technician/tasks', icon: <ClipboardIcon /> },
           { label: 'Settings', to: '/settings', icon: <SettingsIcon /> },
         ]
 
