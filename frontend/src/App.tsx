@@ -7,7 +7,7 @@ import FrequenciesPage from './pages/FrequenciesPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import SettingsPage from './pages/SettingsPage'
-import TasksPage from './pages/TasksPage'
+import TaskBuilderPage from './pages/TaskBuilderPage'
 import TechnicianDashboardPage from './pages/TechnicianDashboardPage'
 import TechnicianRegisterPage from './pages/TechnicianRegisterPage'
 import TechnicianSearchPage from './pages/TechnicianSearchPage'
@@ -42,7 +42,7 @@ function App() {
         path="/admin/tasks"
         element={
           <ProtectedRoute role="admin">
-            <TasksPage />
+            <TaskBuilderPage />
           </ProtectedRoute>
         }
       />

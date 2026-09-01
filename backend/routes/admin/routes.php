@@ -18,6 +18,7 @@ Route::middleware(['auth:sanctum', 'tenant', 'tenant.selected', 'admin'])->prefi
     Route::delete('/work-tags/{workTag}', [WorkTagController::class, 'destroy']);
 
     Route::post('/tasks', [TaskController::class, 'store']);
+    Route::post('/tasks/bulk', [TaskController::class, 'bulkStore']);
     Route::put('/tasks/{task}', [TaskController::class, 'update']);
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TaskBulkRequest;
 use App\Http\Requests\TaskRequest;
 use App\Http\Resources\TaskResource;
 use App\Models\Task;
@@ -43,21 +44,7 @@ class TaskController extends Controller
         $data = $request->validated();
 
         try {
-            $task = DB::connection('tenant')->transaction(function () use ($data) {
-                $task = Task::create([
-                    'name' => $data['name'],
-                    'description' => $data['description'],
-                    'frequency_id' => $data['frequency_id'],
-                ]);
-
-                $task->workTags()->attach($data['work_tag_ids'] ?? []);
-
-                $this->saveSubtasks($task, $data['subtasks']);
-
-                $this->syncTechnicians($task, $data['technician_ids'] ?? []);
-
-                return $task;
-            });
+            $task = DB::connection('tenant')->transaction(fn () => $this->createTaskRecord($data));
         } catch (Throwable $e) {
             report($e);
 
@@ -71,6 +58,81 @@ class TaskController extends Controller
         ], 201);
     }
 
+    public function bulkStore(TaskBulkRequest $request): JsonResponse
+    {
+        $data = $request->validated();
+
+        try {
+            $tasks = DB::connection('tenant')->transaction(
+                fn () => collect($data['tasks'])->map(function (array $task) {
+                    if (! empty($task['id'])) {
+                        return $this->updateTaskRecord(Task::findOrFail($task['id']), $task);
+                    }
+
+                    return $this->createTaskRecord($task);
+                })
+            );
+        } catch (Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'message' => 'Could not save the tasks. Please try again.',
+            ], 500);
+        }
+
+        return response()->json([
+            'message' => 'Tasks saved successfully.',
+            'count' => $tasks->count(),
+            'task_ids' => $tasks->pluck('id')->values(),
+        ], 201);
+    }
+
+    /**
+     * Shared single-task creation logic used by both store() and bulkStore().
+     *
+     * @param  array{name: string, description: string, frequency_id: int, work_tag_ids?: array<int, int>, subtasks: array<int, array{name: string, description?: string|null, estimated_time: int, estimated_time_unit: string}>, technician_ids?: array<int, int>}  $data
+     */
+    private function createTaskRecord(array $data): Task
+    {
+        $task = Task::create([
+            'name' => $data['name'],
+            'description' => $data['description'],
+            'frequency_id' => $data['frequency_id'],
+        ]);
+
+        $task->workTags()->attach($data['work_tag_ids'] ?? []);
+
+        $this->saveSubtasks($task, $data['subtasks']);
+
+        $this->syncTechnicians($task, $data['technician_ids'] ?? []);
+
+        return $task;
+    }
+
+    /**
+     * Shared single-task update logic used by both update() and bulkStore().
+     *
+     * @param  array{name: string, description: string, frequency_id: int, work_tag_ids?: array<int, int>, subtasks: array<int, array{name: string, description?: string|null, estimated_time: int, estimated_time_unit: string}>, technician_ids?: array<int, int>}  $data
+     */
+    private function updateTaskRecord(Task $task, array $data): Task
+    {
+        $task->update([
+            'name' => $data['name'],
+            'description' => $data['description'],
+            'frequency_id' => $data['frequency_id'],
+        ]);
+
+        $task->workTags()->sync($data['work_tag_ids'] ?? []);
+
+        // deleting the subtask and saving the new (approach for performance)
+        $task->subtasks()->delete();
+        $this->saveSubtasks($task, $data['subtasks']);
+
+        $this->syncTechnicians($task, $data['technician_ids'] ?? []);
+
+        return $task;
+    }
+
     /**
      * To update the task
      */
@@ -80,21 +142,7 @@ class TaskController extends Controller
         $data = $request->validated();
 
         try {
-            DB::connection('tenant')->transaction(function () use ($data, $model) {
-                $model->update([
-                    'name' => $data['name'],
-                    'description' => $data['description'],
-                    'frequency_id' => $data['frequency_id'],
-                ]);
-
-                $model->workTags()->sync($data['work_tag_ids'] ?? []);
-
-                // deleting the subtask and saving the new (approach for performance)
-                $model->subtasks()->delete();
-                $this->saveSubtasks($model, $data['subtasks']);
-
-                $this->syncTechnicians($model, $data['technician_ids'] ?? []);
-            });
+            DB::connection('tenant')->transaction(fn () => $this->updateTaskRecord($model, $data));
         } catch (Throwable $e) {
             report($e);
 
