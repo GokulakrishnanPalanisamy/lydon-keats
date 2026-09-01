@@ -1028,77 +1028,7 @@
   gap: 6px;
 }
 
-/* ---------- Task accordion ---------- */
-
-.task-accordion-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.task-accordion-item {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--bg);
-}
-
-.task-accordion-header {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 16px 20px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-align: left;
-  font: inherit;
-}
-
-.task-accordion-header:hover {
-  background: var(--code-bg);
-}
-
-.task-accordion-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-h);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.task-accordion-number {
-  color: var(--accent);
-  margin-right: 4px;
-}
-
-.task-accordion-toggle {
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--accent-bg);
-  color: var(--accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.task-accordion-toggle svg {
-  width: 16px;
-  height: 16px;
-}
-
-.task-accordion-body {
-  padding: 0 20px 20px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
+/* ---------- Task detail rows (read-only technician task detail) ---------- */
 
 .task-accordion-row {
   display: flex;
@@ -1303,6 +1233,255 @@
   font-weight: 600;
   color: var(--text-h);
   padding: 8px 0 0;
+}
+
+/* ---------- Task Builder page ---------- */
+
+/* Read-only, at the top of the page: which task numbers fall under each
+   frequency, and their combined time — derived purely from current task
+   state, never stored. */
+.task-frequency-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.task-frequency-summary-row {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 16px;
+}
+
+@media (max-width: 700px) {
+  .task-frequency-summary-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.task-frequency-summary-box {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.task-frequency-summary-label {
+  flex-shrink: 0;
+  padding: 12px 16px;
+  background: var(--code-bg);
+  color: var(--text);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.task-frequency-summary-value {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 16px;
+  color: var(--text-h);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: break-word;
+}
+
+.task-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* One bordered panel holding every task, scrollable internally so the
+   builder reads as a single continuous list rather than separate page-long
+   cards. */
+.task-builder-panel {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+}
+
+.task-builder-scroll {
+  max-height: 65vh;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.task-builder-section {
+  padding: 20px 0;
+  border-top: 1px solid var(--border);
+}
+
+.task-builder-section:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.task-builder-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.task-builder-section-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-builder-icon-btn-toggle:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.task-builder-chevron {
+  display: flex;
+  transition: transform 0.15s ease;
+}
+
+.task-builder-chevron-up {
+  transform: rotate(180deg);
+}
+
+.task-builder-section-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.task-builder-time-badge {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.task-builder-number {
+  color: var(--accent);
+}
+
+.task-builder-fields {
+  padding: 0;
+  overflow: visible;
+}
+
+/* Read-only, derived from this task's subtasks — never user-editable. */
+.task-builder-total-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--code-bg);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.task-builder-total-time strong {
+  color: var(--text-h);
+}
+
+.task-builder-subtasks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 0 0 20px;
+  border-left: 2px solid var(--accent-bg);
+  margin-left: 4px;
+}
+
+.task-builder-row-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.task-builder-icon-btn {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  padding: 0;
+}
+
+.task-builder-icon-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.task-builder-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.task-builder-icon-btn-add {
+  color: #16a34a;
+  border-color: rgba(22, 163, 74, 0.4);
+}
+
+.task-builder-icon-btn-add:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.task-builder-icon-btn-reset {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.task-builder-icon-btn-reset:hover:not(:disabled) {
+  background: var(--accent-bg);
+}
+
+.task-builder-icon-btn-remove {
+  color: #e0304e;
+  border-color: rgba(224, 48, 78, 0.4);
+}
+
+.task-builder-icon-btn-remove:hover:not(:disabled) {
+  background: rgba(224, 48, 78, 0.1);
+}
+
+.task-builder-footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px 20px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.task-builder-footer-actions {
+  display: flex;
+  gap: 8px;
 }
 
 /* ---------- Technician: My Tasks ---------- */
